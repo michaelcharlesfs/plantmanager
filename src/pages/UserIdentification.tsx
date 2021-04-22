@@ -9,8 +9,11 @@ import {
     KeyboardAvoidingView, 
     Platform,
     TouchableWithoutFeedback,
-    Keyboard
+    Keyboard,
+    Alert
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import {Button} from '../components/Button';
 
 import colors from '../styles/colors';
@@ -38,9 +41,22 @@ export function UserIdentification() {
 
     const navigation = useNavigation();
 
-    function handleConfirmation() {
-        if (name) {
-            navigation.navigate('Confirmation');
+    async function handleConfirmation() {
+        if (!name) {
+            return Alert.alert('Me diz como chamar você 😢');
+        }
+        try {
+            await AsyncStorage.setItem('@plantmanager:user', name);
+
+            navigation.navigate('Confirmation', {
+                title: 'Prontinho',
+                subtitle: 'Agora vamos começar a cuidar das suas plantinhas com muito cuidado.',
+                buttonTitle: 'Começar',
+                icon: 'smile',
+                nextScreen: 'PlantSelect'
+            });
+        } catch {
+            Alert.alert('Não foi possível salvar o seu nome de usuário 😢');
         }
     }
 

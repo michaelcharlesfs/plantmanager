@@ -6,11 +6,13 @@ import {
     FlatList,
     ActivityIndicator
 } from 'react-native';
+import { useNavigation } from '@react-navigation/core';
 
 import { Header } from '../components/Header';
 import { EnvironmentButton } from '../components/EnvironmentButton';
 import { PlantCardPrimary } from '../components/PlantCardPrimary';
 import { Load } from '../components/Load';
+import { PlantProps } from '../libs/storage';
 
 import colors from '../styles/colors';
 import fonts from '../styles/fonts';
@@ -19,19 +21,6 @@ import api from '../services/api';
 interface EnvironmentProps {
     key: string;
     title: string;
-}
-
-interface PlantProps {
-    id: string;
-    name: string;
-    about: string;
-    water_tips: string;
-    photo: string;
-    environments: string[];
-    frequency: {
-        times: number;
-        repeat_every: string;
-    }
 }
 
 export function PlantSelect() {
@@ -44,7 +33,8 @@ export function PlantSelect() {
 
     const [page, setPage] = useState(1);
     const [loadingMore, setLoadingMore] = useState(false);
-    const [loadedAll, setLoadedAll] = useState(false);
+
+    const navigation = useNavigation();
 
     function handleEnvironmentSelection(environment: string) {
         setSelectedEnvironment(environment);
@@ -82,6 +72,10 @@ export function PlantSelect() {
         fetchPlants();
     }
 
+    function handlePlantSelect(plant: PlantProps) {
+        navigation.navigate('PlantSave', { plant });
+    }
+
     useEffect(() => {
         async function fetchEnvironment() {
             const {data} = await api.get('plants_environments?_sort=title&_order=asc');
@@ -116,6 +110,7 @@ export function PlantSelect() {
             <View>
                 <FlatList 
                     data={environments} 
+                    keyExtractor={(item) => String(item.key)}
                     renderItem={({item}) => (
                         <EnvironmentButton title={item.title} 
                             active={item.key === selectedEnvironment} 
@@ -130,7 +125,13 @@ export function PlantSelect() {
             <View style={styles.plants}>
                 <FlatList 
                 data={filteredPlants}
-                renderItem={({item}) => (<PlantCardPrimary data={item} />)}
+                keyExtractor={(item) => String(item.id)}
+                renderItem={({item}) => (
+                    <PlantCardPrimary 
+                        data={item} 
+                        onPress={() => handlePlantSelect(item)}
+                    />
+                )}
                 showsVerticalScrollIndicator={false}
                 numColumns={2}
                 onEndReachedThreshold={0.1}
